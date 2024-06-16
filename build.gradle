@@ -49,6 +49,30 @@ jacoco {
 	toolVersion = "0.8.9"
 }
 
+task installPreCommitHook(type: Copy){
+	from new File(rootProject.rootDir, 'scripts/pre-commit')
+	into { new File(rootProject.rootDir, '.git/hooks')}
+	fileMode 0775
+}
+
+task installPrePushHook(type: Copy){
+	from new File(rootProject.rootDir, 'scripts/pre-push')
+	into { new File(rootProject.rootDir, '.git/hooks')}
+	fileMode 0775
+}
+
 jacocoTestReport {
 	dependsOn test
 }
+jacocoTestCoverageVerification {
+	violationRules {
+		rule {
+			limit {
+				minimum = 0.3
+			}
+		}
+	}
+}
+
+// to run coverage verification during the build (and fail when appropriate)
+check.dependsOn jacocoTestCoverageVerification
