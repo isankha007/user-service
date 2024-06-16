@@ -1,0 +1,44 @@
+spring:
+  datasource:
+    platform: h2
+    url: jdbc:h2:mem:bazaar_db
+    username: root
+    password: admin
+    driverClassName: org.h2.Driver
+  security:
+    jwt:
+      secret: "lRgYmPbbwO2YBOKE2caxiVwwG3nDaOvm"  #${JWT_SECRET}
+  kafka:
+    consumer:
+      bootstrap-servers: localhost:9092,localhost:9093,localhost:9094
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      group-id: group7
+    producer:
+      bootstrap-servers: localhost:9092,localhost:9093,localhost:9094
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: true
+    properties:
+      hibernate:
+      format_sql: true
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+  flyway:
+    enabled: false
+  application:
+    name: user-service
+server:
+  port: 8082
+user:
+  kafka:
+    topic: "user_event"
+
+
+

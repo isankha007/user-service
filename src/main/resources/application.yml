@@ -1,0 +1,43 @@
+spring:
+  profiles:
+    active: default
+  datasource:
+    url: jdbc:mysql://${MYSQL_HOST:localhost}:3306/bazaar_db
+    username: ${MYSQL_USERNAME:root}
+    password: ${MYSQL_PASSWORD:Admin@123}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  security:
+    jwt:
+      secret: ${JWT_SECRET}
+  kafka:
+    consumer:
+      bootstrap-servers: ${BOOT_STRAP_SERVERS}
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      group-id: group7
+    producer:
+      bootstrap-servers: ${BOOT_STRAP_SERVERS}
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+  jpa:
+    hibernate:
+      ddl-auto: none
+    show-sql: true
+    properties:
+      hibernate:
+      format_sql: true
+      id:
+      new_generator_mappings: true
+    database: mysql
+    database-platform: org.hibernate.dialect.MySQLDialect
+  application:
+    name: user-service
+  flyway:
+      baseline-on-migrate: true
+      table: flyway_schema_history_users
+server:
+  port: 8082
+user:
+  kafka:
+    topic: "user_event"
+
