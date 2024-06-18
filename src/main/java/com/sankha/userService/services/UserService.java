@@ -35,7 +35,6 @@ public class UserService {
 		return (byMail != null || byNumber != null);
 	}
 
-
 	private User extractUserFromRequest(UserRequest userRequest) {
 		return User.builder().email(userRequest.email()).role(userRequest.role()).phoneNumber(userRequest.phoneNumber())
 				.password(passwordEncoder.encode(userRequest.password()))
