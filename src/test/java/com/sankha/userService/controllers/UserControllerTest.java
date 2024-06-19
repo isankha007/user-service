@@ -1,8 +1,10 @@
 package com.sankha.userService.controllers;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sankha.userService.dto.UserRequest;
 import com.sankha.userService.entities.Role;
+import com.sankha.userService.exceptions.UserAlreadyExistException;
 import com.sankha.userService.services.JwtService;
 import com.sankha.userService.services.UserService;
 import org.junit.jupiter.api.BeforeEach;
@@ -19,6 +21,7 @@ import org.springframework.web.context.WebApplicationContext;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -60,5 +63,38 @@ class UserControllerTest {
 				.andExpect(status().isCreated());
 		verify(userServiceMock).register(userRequest, referredByUserId);
 
+	}
+
+	@Test
+	void userShouldBeAbleToRegisterWithoutReferral() throws Exception {
+		UserRequest userRequest =
+				new UserRequest("abc@example.com", "9158986369",
+						"Email", "password", Role.ADMIN);
+		String json = objectMapper.writeValueAsString(userRequest);
+		mockMvc.perform(post("/users/register")
+						.content(json)
+						.contentType(MediaType.APPLICATION_JSON))
+				.andExpect(status().isCreated());
+		verify(userServiceMock).register(userRequest, null);
+
+	}
+
+	@Test
+	void shouldThrowExceptionWhenUserAlreadyExist() throws Exception {
+		UserRequest userRequest =
+				new UserRequest("abc@example.com", "9158986369",
+						"Email", "password", Role.ADMIN);
+		;
+		String json = objectMapper.writeValueAsString(userRequest);
+		UUID id = UUID.randomUUID();
+		String referredByUserId = id.toString();
+
+		doThrow(new UserAlreadyExistException("User already exists")).when(userServiceMock).register(userRequest,id);
+		mockMvc.perform(post("/users/register")
+						.param("referredby", String.valueOf(referredByUserId))
+						.content(json)
+						.contentType(MediaType.APPLICATION_JSON))
+				.andExpect(status().isBadRequest());
+		verify(userServiceMock).register(userRequest,id);
 	}
 }

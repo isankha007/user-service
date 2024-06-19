@@ -50,10 +50,15 @@ dependencies {
 	testImplementation 'org.springframework.security:spring-security-test'
 
 }
+tasks.named('build') {
+	dependsOn(installPrePushHook)
+}
 
 tasks.named('test') {
 	useJUnitPlatform()
 	finalizedBy jacocoTestReport
+//	finalizedBy jacocoTestCoverageVerification
+
 }
 jacoco {
 	toolVersion = "0.8.9"
@@ -77,7 +82,11 @@ jacocoTestReport {
 jacocoTestCoverageVerification {
 	violationRules {
 		rule {
+			enabled = true
+			element = 'BUNDLE'
 			limit {
+				counter = 'INSTRUCTION'
+				value = 'COVEREDRATIO'
 				minimum = 0.4
 			}
 		}

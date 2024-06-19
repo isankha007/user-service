@@ -3,8 +3,8 @@ spring:
     active: default
   datasource:
     url: jdbc:mysql://${MYSQL_HOST:localhost}:3306/bazaar_db
-    username: ${MYSQL_USERNAME:root}
-    password: ${MYSQL_PASSWORD:Admin@123}
+    username: ${MYSQL_USERNAME}
+    password: ${MYSQL_PASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver
   security:
     jwt:

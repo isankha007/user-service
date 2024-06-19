@@ -1,0 +1,21 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="UserServiceApplication" type="Application" factoryName="Application" nameIsGenerated="true">
+    <envs>
+      <env name="BOOT_STRAP_SERVERS" value="localhost:9092,localhost:9093,localhost:9094" />
+      <env name="JWT_SECRET" value="lRgYmPbbwO2YBOKE2caxiVwwG3nDaOvm" />
+      <env name="MYSQL_PASSWORD" value="Admin@123" />
+      <env name="MYSQL_USERNAME" value="root" />
+    </envs>
+    <option name="MAIN_CLASS_NAME" value="com.sankha.userService.UserServiceApplication" />
+    <module name="userService.main" />
+    <extension name="coverage">
+      <pattern>
+        <option name="PATTERN" value="com.sankha.userService.*" />
+        <option name="ENABLED" value="true" />
+      </pattern>
+    </extension>
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
+</component>
