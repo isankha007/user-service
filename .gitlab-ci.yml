@@ -1,0 +1,24 @@
+stages:
+  - test
+  - analysis
+  - build
+
+unit_tests:
+  #  before_script:
+  #    - brew install openjdk@17
+  stage: test
+  script: ./gradlew clean test
+  artifacts:
+    reports:
+      junit: build/test-results/test/TEST-*.xml
+
+static_code_analysis:
+  stage: analysis
+  script: ./gradlew checkstyleMain
+
+create_build:
+  #  before_script:
+  #    -
+  #  Usually create a docker image that would be deployed
+  stage: build
+  script: ./gradlew clean build

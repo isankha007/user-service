@@ -2,6 +2,7 @@ package com.sankha.userService.controllers;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sankha.userService.dto.LoginRequest;
 import com.sankha.userService.dto.UserRequest;
 import com.sankha.userService.entities.Role;
 import com.sankha.userService.exceptions.UserAlreadyExistException;
@@ -9,6 +10,7 @@ import com.sankha.userService.services.JwtService;
 import com.sankha.userService.services.UserService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -96,5 +98,20 @@ class UserControllerTest {
 						.contentType(MediaType.APPLICATION_JSON))
 				.andExpect(status().isBadRequest());
 		verify(userServiceMock).register(userRequest,id);
+	}
+
+	@Test
+	void UserShouldBeAbleToLogin() throws Exception {
+		LoginRequest loginRequest = new LoginRequest("abc@example.coms", "password");
+		String json = objectMapper.writeValueAsString(loginRequest);
+		mockMvc.perform(
+						post("/users/login")
+								.content(json)
+								.contentType(MediaType.APPLICATION_JSON)
+				)
+				.andExpect(status().isOk());
+
+
+		Mockito.verify(userServiceMock).login(loginRequest);
 	}
 }

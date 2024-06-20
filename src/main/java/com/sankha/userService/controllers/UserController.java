@@ -1,10 +1,13 @@
 package com.sankha.userService.controllers;
 
+import com.sankha.userService.dto.AuthenticationResponse;
+import com.sankha.userService.dto.LoginRequest;
 import com.sankha.userService.dto.UserRequest;
 import com.sankha.userService.services.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
@@ -20,5 +23,10 @@ public class UserController {
 	void registerUser(@RequestBody @Valid UserRequest userRequest,
 	                  @RequestParam(value = "referredby", required = false) UUID userId) {
 		userService.register(userRequest, userId);
+	}
+
+	@PostMapping("/login")
+	public ResponseEntity<AuthenticationResponse> login(@RequestBody LoginRequest loginRequest) {
+		return ResponseEntity.ok(userService.login(loginRequest));
 	}
 }

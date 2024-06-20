@@ -1,6 +1,8 @@
 package com.sankha.userService.services;
 
 import com.sankha.userService.config.AppConstants;
+import com.sankha.userService.dto.AuthenticationResponse;
+import com.sankha.userService.dto.LoginRequest;
 import com.sankha.userService.dto.UserRequest;
 import com.sankha.userService.entities.User;
 import com.sankha.userService.exceptions.UserAlreadyExistException;
@@ -39,5 +41,9 @@ public class UserService {
 		return User.builder().email(userRequest.email()).role(userRequest.role()).phoneNumber(userRequest.phoneNumber())
 				.password(passwordEncoder.encode(userRequest.password()))
 				.preference(userRequest.preference()).build();
+	}
+
+	public AuthenticationResponse login(LoginRequest loginRequest) {
+		return null;
 	}
 }
