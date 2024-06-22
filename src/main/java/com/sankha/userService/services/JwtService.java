@@ -50,7 +50,6 @@ public class JwtService {
         Claims claimsJws = extractAllClaims(jwt);
         return claimsJws.getSubject();
 
-
     }
 
     private Claims extractAllClaims(String jwt) {
