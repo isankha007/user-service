@@ -1,5 +1,7 @@
 package com.sankha.userService.services;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sankha.userService.config.AppConstants;
 import com.sankha.userService.dto.AuthenticationResponse;
 import com.sankha.userService.dto.LoginRequest;
@@ -7,17 +9,26 @@ import com.sankha.userService.dto.UserRequest;
 import com.sankha.userService.entities.User;
 import com.sankha.userService.exceptions.UserAlreadyExistException;
 import com.sankha.userService.repositories.UserRepository;
+import com.sankha.userService.subscribers.UserEvent;
 import lombok.RequiredArgsConstructor;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.UUID;
+
+import static com.sankha.userService.config.AppConstants.CREATE_USER;
+import static com.sankha.userService.config.AppConstants.USER_EVENT;
 
 @Service
 @RequiredArgsConstructor
 public class UserService {
 	private final PasswordEncoder passwordEncoder;
 	private final UserRepository repository;
+	private final KafkaTemplate<String, Object> kafkaTemplate;
+	ObjectMapper mapper = new ObjectMapper();
+	//@Value("${user.kafka.topic}")
+	private String topic = USER_EVENT;
 
 	public void register(UserRequest userRequest, UUID referredByUserId) {
 		User user = extractUserFromRequest(userRequest);
@@ -26,9 +37,21 @@ public class UserService {
 		}
 		User saved = repository.save(user);
 //		walletService.createWallet(saved.getId());
-//		if (saved != null)
-//			sendMessage(saved, CREATE_USER, referralCode);
+		if (saved != null) {
+			sendMessage(referredByUserId, saved);
+		}
 
+	}
+
+	private void sendMessage(UUID referredByUserId, User saved) {
+		UserEvent userEvent = new UserEvent(saved.getEmail(), saved.getPhoneNumber(),
+				saved.getPreference(), CREATE_USER, referredByUserId, saved.getId());
+		try {
+			String jsonString = mapper.writeValueAsString(userEvent);
+			this.kafkaTemplate.send(this.topic, jsonString);
+		} catch (JsonProcessingException e) {
+			throw new RuntimeException(e);
+		}
 	}
 
 	private boolean userExist(User user) {
@@ -38,9 +61,7 @@ public class UserService {
 	}
 
 	private User extractUserFromRequest(UserRequest userRequest) {
-		return User.builder().email(userRequest.email()).role(userRequest.role()).phoneNumber(userRequest.phoneNumber())
-				.password(passwordEncoder.encode(userRequest.password()))
-				.preference(userRequest.preference()).build();
+		return User.builder().email(userRequest.email()).role(userRequest.role()).phoneNumber(userRequest.phoneNumber()).password(passwordEncoder.encode(userRequest.password())).preference(userRequest.preference()).build();
 	}
 
 	public AuthenticationResponse login(LoginRequest loginRequest) {

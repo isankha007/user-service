@@ -4,7 +4,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sankha.userService.dto.UserRequest;
 import com.sankha.userService.entities.Role;
 import com.sankha.userService.entities.User;
+import com.sankha.userService.exceptions.UserAlreadyExistException;
 import com.sankha.userService.repositories.UserRepository;
+import jakarta.validation.constraints.AssertTrue;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -19,6 +21,8 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
+
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -73,5 +77,31 @@ public class UserServiceTest {
 		Assertions.assertEquals(userRequest.phoneNumber(), actualUser.getPhoneNumber());
 		Assertions.assertEquals(userRequest.role(), actualUser.getRole());
 		Assertions.assertNotNull(actualUser.getPassword());
+	}
+
+	@Test
+	void shouldThrowExceptionIfAlreadyExist() {
+		UserRequest userRequest =
+				new UserRequest("abc@example.com", "9158986369",
+						"Email", "password", Role.ADMIN);
+		User user = objectMapper.convertValue(userRequest, User.class);
+		when(userRepository.findByEmail(user.getEmail())).thenReturn(Optional.of(user));
+
+		UserAlreadyExistException userAlreadyExistException = assertThrows(UserAlreadyExistException.class, () -> userService.register(userRequest, null));
+
+		Assertions.assertEquals("User Already exist",userAlreadyExistException.getMessage());
+	}
+
+	@Test
+	void ShouldInformUserIsCreatedOnSuccessfulRegistration() {
+		UserRequest userRequest =
+				new UserRequest("abc@example.com", "9158986369",
+						"Email", "password", Role.ADMIN);
+		User user = objectMapper.convertValue(userRequest, User.class);
+		when(userRepository.save(any(User.class))).thenReturn(user);
+		ArgumentCaptor<UserRequest> userRequestArgumentCaptor = ArgumentCaptor.forClass(UserRequest.class);
+
+		userService.register(userRequest,null);
+		verify(kafkaTemplate).send(anyString(),anyString());
 	}
 }
