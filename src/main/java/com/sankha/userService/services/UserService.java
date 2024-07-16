@@ -61,7 +61,9 @@ public class UserService {
 	}
 
 	private User extractUserFromRequest(UserRequest userRequest) {
-		return User.builder().email(userRequest.email()).role(userRequest.role()).phoneNumber(userRequest.phoneNumber()).password(passwordEncoder.encode(userRequest.password())).preference(userRequest.preference()).build();
+		return User.builder().email(userRequest.email()).role(userRequest.role()).phoneNumber(userRequest.phoneNumber())
+				.password(passwordEncoder.encode(userRequest.password()))
+				.preference(userRequest.preference()).build();
 	}
 
 	public AuthenticationResponse login(LoginRequest loginRequest) {
