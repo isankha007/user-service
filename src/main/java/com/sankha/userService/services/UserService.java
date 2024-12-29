@@ -3,18 +3,20 @@ package com.sankha.userService.services;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sankha.userService.config.AppConstants;
-import com.sankha.userService.dto.AuthenticationResponse;
-import com.sankha.userService.dto.LoginRequest;
-import com.sankha.userService.dto.UserRequest;
+import com.sankha.userService.dto.*;
 import com.sankha.userService.entities.User;
 import com.sankha.userService.exceptions.UserAlreadyExistException;
 import com.sankha.userService.repositories.UserRepository;
 import com.sankha.userService.subscribers.UserEvent;
 import lombok.RequiredArgsConstructor;
 import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import static com.sankha.userService.config.AppConstants.CREATE_USER;
@@ -25,6 +27,8 @@ import static com.sankha.userService.config.AppConstants.USER_EVENT;
 public class UserService {
 	private final PasswordEncoder passwordEncoder;
 	private final UserRepository repository;
+	private final UserDetailsService userDetailsService;
+	private final JwtService jwtService;
 	private final KafkaTemplate<String, Object> kafkaTemplate;
 	ObjectMapper mapper = new ObjectMapper();
 	//@Value("${user.kafka.topic}")
@@ -68,5 +72,15 @@ public class UserService {
 
 	public AuthenticationResponse login(LoginRequest loginRequest) {
 		return null;
+	}
+
+	public VerificationResponse verifyToken(VerificationRequest verificationRequest) {
+		UserDetails userDetails = this.userDetailsService.loadUserByUsername(verificationRequest.username());
+		boolean isTokenValid = jwtService.validateToken(verificationRequest.jwt(), userDetails);
+		Optional<User> byEmail = repository.findByEmail(verificationRequest.username());
+		if (isTokenValid)
+			return new VerificationResponse(AppConstants.SUCCESS, ((List) userDetails.getAuthorities()).get(0).toString(),
+					userDetails.getUsername(), byEmail.get().getId());
+		return new VerificationResponse(AppConstants.FAILED, null, null, null);
 	}
 }

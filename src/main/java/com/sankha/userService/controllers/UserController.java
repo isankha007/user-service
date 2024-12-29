@@ -1,8 +1,6 @@
 package com.sankha.userService.controllers;
 
-import com.sankha.userService.dto.AuthenticationResponse;
-import com.sankha.userService.dto.LoginRequest;
-import com.sankha.userService.dto.UserRequest;
+import com.sankha.userService.dto.*;
 import com.sankha.userService.services.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -28,5 +26,10 @@ public class UserController {
 	@PostMapping("/login")
 	public ResponseEntity<AuthenticationResponse> login(@RequestBody LoginRequest loginRequest) {
 		return ResponseEntity.ok(userService.login(loginRequest));
+	}
+
+	@PostMapping("/verify")
+	public ResponseEntity<VerificationResponse> verifyToken(@RequestBody VerificationRequest token) {
+		return ResponseEntity.ok(userService.verifyToken(token));
 	}
 }

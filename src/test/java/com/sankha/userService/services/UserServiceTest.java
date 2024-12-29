@@ -1,7 +1,11 @@
 package com.sankha.userService.services;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sankha.userService.builder.UserBuilder;
 import com.sankha.userService.dto.UserRequest;
+import com.sankha.userService.dto.VerificationRequest;
+import com.sankha.userService.dto.VerificationResponse;
 import com.sankha.userService.entities.Role;
 import com.sankha.userService.entities.User;
 import com.sankha.userService.exceptions.UserAlreadyExistException;
@@ -23,6 +27,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.util.Optional;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -103,5 +108,41 @@ public class UserServiceTest {
 
 		userService.register(userRequest,null);
 		verify(kafkaTemplate).send(anyString(),anyString());
+	}
+
+	@Test
+	void shouldVerifyToken() throws JsonProcessingException {
+		String jwt = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9" +
+				".eyJzdWIiOiJhYmNAZXhhbXBsZS5jb20iLCJuYW1lIjoiSm9obiBEb2UiLCJpYXQiOjE1MTYyMzkwMjJ9" +
+				".gL_-Olf6RhJNiiGnO4aORqmUt8SUJrzlCp6txshQXw8";
+		String userName = "abc@example.com";
+		User user = new UserBuilder().withEmail(userName).withId(UUID.randomUUID()).withRole(Role.USER).build();
+		when(jwtService.validateToken(jwt,user)).thenReturn(true);
+		when(userDetailsService.loadUserByUsername(userName)).thenReturn(user);
+		when(userRepository.findByEmail(userName)).thenReturn(Optional.of(user));
+		VerificationRequest verificationRequest = new VerificationRequest(jwt, userName);
+
+		VerificationResponse response = userService.verifyToken(verificationRequest);
+
+		Assertions.assertNotNull(response.userId());
+		Assertions.assertEquals(userName,response.username());
+	}
+
+	@Test
+	void shouldNotVerifyToken() throws JsonProcessingException {
+		String jwt = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9" +
+				".eyJzdWIiOiJhYmNAZXhhbXBsZS5jb20iLCJuYW1lIjoiSm9obiBEb2UiLCJpYXQiOjE1MTYyMzkwMjJ9" +
+				".gL_-Olf6RhJNiiGnO4aORqmUt8SUJrzlCp6txshQXw8";
+		String userName = "abc@example.com";
+		User user = new UserBuilder().withEmail(userName).withRole(Role.USER).build();
+		when(userDetailsService.loadUserByUsername(userName)).thenReturn(user);
+		when(jwtService.validateToken(jwt,user)).thenReturn(false);
+		VerificationRequest verificationRequest = new VerificationRequest(jwt, userName);
+		String jsonString = objectMapper.writeValueAsString(verificationRequest);
+
+		VerificationResponse response = userService.verifyToken(verificationRequest);
+
+		//Assertions.assertNull(response.token());
+		Assertions.assertNull(response.username());
 	}
 }

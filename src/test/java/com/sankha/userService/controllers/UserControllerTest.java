@@ -4,10 +4,12 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sankha.userService.dto.LoginRequest;
 import com.sankha.userService.dto.UserRequest;
+import com.sankha.userService.dto.VerificationRequest;
 import com.sankha.userService.entities.Role;
 import com.sankha.userService.exceptions.UserAlreadyExistException;
 import com.sankha.userService.services.JwtService;
 import com.sankha.userService.services.UserService;
+import io.jsonwebtoken.security.SignatureException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -113,5 +115,42 @@ class UserControllerTest {
 
 
 		Mockito.verify(userServiceMock).login(loginRequest);
+	}
+
+	@Test
+	void JwtTokenShouldBeVerifiedSuccessfully() throws Exception {
+		String jwt = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9" +
+				".eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ" +
+				".SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c";
+		String userName = "abc@example.com";
+		VerificationRequest verificationRequest = new VerificationRequest(jwt,userName);
+		String jsonString = objectMapper.writeValueAsString(verificationRequest);
+		mockMvc.perform(
+						post("/users/verify")
+								.content(jsonString)
+								.contentType(MediaType.APPLICATION_JSON)
+				)
+				.andExpect(status().isOk());
+
+		Mockito.verify(userServiceMock).verifyToken(verificationRequest);
+	}
+
+	@Test
+	void JwtTokenVerificationShouldFail() throws Exception {
+		String jwt = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9" +
+				".eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ" +
+				".SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c";
+		String userName = "abc@example.com";
+		VerificationRequest verificationRequest = new VerificationRequest(jwt, userName);
+		String jsonString = objectMapper.writeValueAsString(verificationRequest);
+		doThrow(SignatureException.class).when(userServiceMock).verifyToken(verificationRequest);
+		mockMvc.perform(
+						post("/users/verify")
+								.content(jsonString)
+								.contentType(MediaType.APPLICATION_JSON)
+				)
+				.andExpect(status().isUnauthorized());
+
+		Mockito.verify(userServiceMock).verifyToken(verificationRequest);
 	}
 }
