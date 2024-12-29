@@ -10,8 +10,11 @@ import com.sankha.userService.repositories.UserRepository;
 import com.sankha.userService.subscribers.UserEvent;
 import lombok.RequiredArgsConstructor;
 import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -29,6 +32,7 @@ public class UserService {
 	private final UserRepository repository;
 	private final UserDetailsService userDetailsService;
 	private final JwtService jwtService;
+	private final AuthenticationManager authenticationManager;
 	private final KafkaTemplate<String, Object> kafkaTemplate;
 	ObjectMapper mapper = new ObjectMapper();
 	//@Value("${user.kafka.topic}")
@@ -70,8 +74,15 @@ public class UserService {
 				.preference(userRequest.preference()).build();
 	}
 
-	public AuthenticationResponse login(LoginRequest loginRequest) {
-		return null;
+	public AuthenticationResponse login(LoginRequest request) {
+		authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(request.email(), request.password()));
+		User user = repository.findByEmail(request.email()).orElseThrow(() -> new UsernameNotFoundException("User not found"));
+		String token = jwtService.generateToken(user);
+		return new AuthenticationResponse(AppConstants.SUCCESS, user.getEmail(), token);
+	}
+
+	public Optional<User> getUser(UUID userId) {
+		return repository.findById(userId);
 	}
 
 	public VerificationResponse verifyToken(VerificationRequest verificationRequest) {
